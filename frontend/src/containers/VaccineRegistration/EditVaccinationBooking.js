@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import {
   Container,
   Box,
@@ -9,119 +11,160 @@ import {
   MenuItem,
   InputLabel,
 } from "@mui/material";
-import DateTimePicker from "@mui/lab/DateTimePicker";
-import React, { Component } from "react";
+import DatePicker from "@mui/lab/DatePicker";
+import {
+  useFetchCentre,
+  useUserInfo,
+  useFetchAvailability,
+} from "../Helper/customeHooks";
 
-function getVaccineCenter() {
-  return [
-    { name: "None", id: 0 },
-    { name: "Bukit Batok CC", id: 1 },
-    { name: "Bukit Panjang CC", id: 2 },
-    { name: "Bukit Timah CC", id: 3 },
-    { name: "Outram Park Polyclinic", id: 4 },
-  ];
-}
+const EditVaccinationBooking = ({}) => {
+  const [centreList, setCentreList] = useState([]);
+  const [selectedCentre, setSelectedCentre] = useState("");
+  const [selectedDate, setSelectedDate] = useState();
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [availability, setAvailability] = useState();
+  const [userInfo, setUserInfo] = useState({});
+  const [message, setMessage] = useState("");
 
-function getBooking() {
-  return {
-    id: 1,
-    name: "Tan Ah Kow",
-    centerName: "Bukit Timah CC",
-    centerId: 3,
-    startTime: new Date("2021-12-01T09:00:00"),
-  };
-}
+  const { bookingId } = useParams();
 
-export class EditVaccineRegistration extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedCenter: getBooking.apply().centerId,
-      date: getBooking.apply().startTime,
+  useFetchCentre({ setCentreList, setMessage });
+  useUserInfo({ bookingId, setUserInfo, setMessage });
+  useFetchAvailability(
+    {
+      selectedDate,
+      selectedCentre,
+      setAvailability,
+      setMessage,
+    },
+    setUserInfo
+  );
+
+  const handleSubmitBooking = async () => {
+    const d = new Date(selectedDate);
+    const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+
+    const userPackage = {
+      ...userInfo,
+      dayMonthYear: date,
+      timeSlot: selectedSlot,
+      centreName: selectedCentre.name,
+      centre: selectedCentre._id,
     };
-    this.handleSelect = this.handleSelect.bind(this);
-    this.handleDateChange = this.handleDateChange.bind(this);
-  }
-  handleSelect(event) {
-    this.setState({ selectedCenter: event.target.value });
-  }
-  handleDateChange(value) {
-    const state = this.state;
-    this.setState({ ...state, date: value });
-  }
-  render() {
-    return (
-      <React.Fragment>
-        <CssBaseline />
-        <Container>
-          <Box
-            component="form"
-            sx={{
-              mt: 8,
+
+    //* UPDATE
+    // submitRegistration({ userPackage, setBookingList, setMessage, history });
+  };
+
+  return (
+    <>
+      <CssBaseline />
+      <Container>
+        <Box
+          component="form"
+          sx={{
+            mt: 8,
+          }}
+        >
+          <Typography component="h1" variant="h5">
+            Book a slot
+          </Typography>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="nric"
+            label={userInfo.nric}
+            name="NRIC"
+            autoComplete="nric"
+            value={userInfo.nric}
+            onChange={(e) =>
+              setUserInfo((data) => ({ ...data, nric: e.target.value }))
+            }
+            sx={{ mb: 2 }}
+            autoFocus
+          />
+          <TextField
+            required
+            fullWidth
+            id="name"
+            label={userInfo?.username}
+            sx={{ mb: 2 }}
+            name="name"
+            autoComplete="name"
+            onChange={(e) =>
+              setUserInfo((data) => ({ ...data, username: e.target.value }))
+            }
+          />
+          <InputLabel id="vaccineCenterLabel">Vaccine Center</InputLabel>
+          <Select
+            labelId="vaccineCenterLabel"
+            label="Vaccine Center"
+            required
+            fullWidth
+            id="vaccineCenter"
+            value={selectedCentre}
+            onChange={(e) => {
+              setSelectedCentre(e.target.value);
             }}
+            sx={{ mb: 2 }}
           >
-            <Typography component="h1" variant="h5">
-              Book a slot
-            </Typography>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="nric"
-              label="NRIC Number"
-              name="NRIC"
-              autoComplete="nric"
-              value={getBooking().id}
-              sx={{mb: 2}}
-              autoFocus
-            />
-            <TextField
-              required
-              fullWidth
-              id="name"
-              label="Full Name"
-              value={getBooking().name}
-              sx={{mb: 2}}
-              name="name"
-              autoComplete="name"
-            />
-            <InputLabel id="vaccineCenterLabel">Vaccine Center</InputLabel>
-            <Select
-              labelId="vaccineCenterLabel"
-              label="Vaccine Center"
-              required
-              fullWidth
-              id="vaccineCenter"
-              value={this.state.selectedCenter}
-              onChange={this.handleSelect}
-              sx={{mb: 2}}
-            >
-              {getVaccineCenter().map((v) => {
+            {centreList &&
+              centreList.map((centre) => {
                 return (
-                  <MenuItem key={v.id} value={v.id}>
-                    {v.name}
+                  <MenuItem key={centre._id} value={centre}>
+                    {centre.name}
                   </MenuItem>
                 );
               })}
-            </Select>
-            <DateTimePicker
-              renderInput={(props) => <TextField {...props} />}
-              label="Slot"
-              value={this.state.date}
-              onChange={this.handleDateChange}
-              required
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Register!
-            </Button>
-          </Box>
-        </Container>
-      </React.Fragment>
-    );
-  }
-}
+          </Select>
+          <DatePicker
+            renderInput={(props) => <TextField {...props} />}
+            label="Select Date"
+            value={selectedDate}
+            onChange={(e) => {
+              setSelectedDate(e);
+            }}
+            required
+          />
+          {availability && (
+            <>
+              <InputLabel id="vaccineCenterLabel">Available Slot</InputLabel>
+              <Select
+                labelId="AvailableSlotLabel"
+                label="Available Slot"
+                required
+                fullWidth
+                id="availableSlot"
+                value={selectedSlot}
+                onChange={(e) => {
+                  console.log(e.target);
+                  setSelectedSlot(e.target.value);
+                }}
+                sx={{ mb: 2 }}
+              >
+                {Object.entries(availability).map(([key, value]) => (
+                  <MenuItem key={key} value={key}>
+                    {`${key}: ${value} Slots Available`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </>
+          )}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            onClick={handleSubmitBooking}
+          >
+            Register!
+          </Button>
+        </Box>
+      </Container>
+    </>
+  );
+};
+
+export default EditVaccinationBooking;

@@ -12,6 +12,11 @@ import {
   InputLabel,
 } from "@mui/material";
 import DatePicker from "@mui/lab/DatePicker";
+import {
+  useFetchCentre,
+  useFetchAvailability,
+  submitRegistration,
+} from "../Helper/customeHooks";
 
 const VaccineRegistration = ({ setBookingList }) => {
   const [centreList, setCentreList] = useState([]);
@@ -23,45 +28,17 @@ const VaccineRegistration = ({ setBookingList }) => {
   const [bookingData, setBookingData] = useState("");
   const history = useHistory();
 
-  useEffect(() => {
-    handleSelectDate(selectedDate);
-  }, [selectedDate, selectedCentre]);
+  useFetchAvailability(
+    {
+      selectedDate,
+      selectedCentre,
+      setAvailability,
+      setMessage,
+    },
+    setBookingData
+  );
 
-  useEffect(() => {
-    const fetchAllCentre = async () => {
-      const res = await fetch("http://localhost:3333/api/centre/", {
-        mode: "cors",
-      });
-      const data = await res.json();
-      if (res.ok) setCentreList(data.allCentre);
-      else setMessage("Website Temporary Unavilable");
-    };
-    fetchAllCentre();
-  }, []);
-
-  const handleSelectDate = async (newValue) => {
-    if (selectedCentre && selectedDate) {
-      const centerId = selectedCentre._id;
-      const d = new Date(newValue);
-      const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-
-      const res = await fetch(
-        `http://localhost:3333/api/bookingTable/availability/${centerId}/${date}`,
-        {
-          mode: "cors",
-        }
-      );
-      const { availability, tableId } = await res.json();
-      if (res.ok) {
-        setAvailability(availability);
-        if (tableId)
-          setBookingData((data) => ({
-            ...data,
-            bookingTable: tableId,
-          }));
-      } else setMessage("Sorry, This Date Is Fully Book");
-    }
-  };
+  useFetchCentre({ setCentreList, setMessage });
 
   const handleSubmitBooking = async () => {
     const d = new Date(selectedDate);
@@ -73,21 +50,7 @@ const VaccineRegistration = ({ setBookingList }) => {
       centreName: selectedCentre.name,
       centre: selectedCentre._id,
     };
-
-    //* Submit Post Request
-    const res = await fetch(`http://localhost:3333/api/bookingTable/new`, {
-      mode: "cors",
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userPackage),
-    });
-    if (res.ok) {
-      const { userBooking } = await res.json();
-      history.push("/bookings");
-      setBookingList([userBooking]);
-    } else setMessage("Oops, something went wrong. Try again later");
+    submitRegistration({ userPackage, setBookingList, setMessage, history });
   };
 
   return (
@@ -175,7 +138,7 @@ const VaccineRegistration = ({ setBookingList }) => {
                 sx={{ mb: 2 }}
               >
                 {Object.entries(availability).map(([key, value]) => (
-                  <MenuItem key={key} value={value}>
+                  <MenuItem key={key} value={key}>
                     {`${key}: ${value} Slots Available`}
                   </MenuItem>
                 ))}

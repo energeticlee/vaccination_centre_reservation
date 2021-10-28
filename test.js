@@ -1,5 +1,7 @@
-const getTime = (date, time) => {
-  const [day, month, year] = date.split(".");
-  const result = new Date(year, month - 1, day, time, 0, 0);
-  return result.toString();
+const getTime = (a) => {
+  const d = new Date(a);
+  const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+  console.log(date | 5);
 };
+
+getTime("");

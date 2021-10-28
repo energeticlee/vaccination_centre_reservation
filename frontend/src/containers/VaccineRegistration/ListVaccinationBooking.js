@@ -57,7 +57,7 @@ const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
                         {getTime(row.dayMonthYear, row.timeSlot)}
                       </TableCell>
                       <TableCell align="left">
-                        <Button component={Link} to="/bookings/1">
+                        <Button component={Link} to={`/bookings/${row._id}`}>
                           <ModeEditIcon />
                         </Button>
                         <Button>
