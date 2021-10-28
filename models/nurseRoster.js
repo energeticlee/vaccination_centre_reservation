@@ -8,9 +8,11 @@ const nurseRoster = new Schema({
     required: true,
   },
   nurseOnDuty: {
-    AM: [{ type: Schema.Types.ObjectId, ref: "nurse" }],
-    PM: [{ type: Schema.Types.ObjectId, ref: "nurse" }],
+    shift1: [{ type: Schema.Types.ObjectId, ref: "nurse" }],
+    shift2: [{ type: Schema.Types.ObjectId, ref: "nurse" }],
+    shift3: [{ type: Schema.Types.ObjectId, ref: "nurse" }],
   },
+  patientNurseRatio: 10,
 });
 
 module.exports = model("nurseRoster", nurseRoster);

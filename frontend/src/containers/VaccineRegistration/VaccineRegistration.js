@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from "react";
+import { useHistory } from "react-router";
 import {
   Container,
   Box,
@@ -9,104 +11,187 @@ import {
   MenuItem,
   InputLabel,
 } from "@mui/material";
-import DateTimePicker from '@mui/lab/DateTimePicker';
-import React, { Component } from "react";
+import DatePicker from "@mui/lab/DatePicker";
 
-function getVaccineCenter() {
-  return [
-    { name: "None", id: 0},
-    { name: "Bukit Batok CC", id: 1 },
-    { name: "Bukit Panjang CC", id: 2 },
-    { name: "Bukit Timah CC", id: 3 },
-    { name: "Outram Park Polyclinic", id: 4 },
-  ];
-}
+const VaccineRegistration = () => {
+  const [centreList, setCentreList] = useState([]);
+  const [selectedCentre, setSelectedCentre] = useState("");
+  const [selectedDate, setSelectedDate] = useState();
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [availability, setAvailability] = useState();
+  const [message, setMessage] = useState("");
+  const [bookingData, setBookingData] = useState("");
+  const history = useHistory();
 
-export class VaccineRegistration extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedCenter: 0,
-      date: new Date(),
+  useEffect(() => {
+    handleSelectDate(selectedDate);
+  }, [selectedDate, selectedCentre]);
+
+  useEffect(() => {
+    const fetchAllCentre = async () => {
+      const res = await fetch("http://localhost:3333/api/centre/", {
+        mode: "cors",
+      });
+      const data = await res.json();
+      if (res.ok) setCentreList(data.allCentre);
+      else setMessage("Website Temporary Unavilable");
     };
-    this.handleSelect = this.handleSelect.bind(this);
-    this.handleDateChange = this.handleDateChange.bind(this);
-  }
-  handleSelect(event) {
-    const state = this.state;
-    this.setState({...state, selectedCenter: event.target.value});
-  }
-  handleDateChange(value) {
-    const state = this.state;
-    this.setState({...state, date: value});
-  }
-  render() {
-    return (
-      <React.Fragment>
-        <CssBaseline />
-        <Container>
-          <Box
-            component="form"
-            sx={{
-              mt: 8,
+    fetchAllCentre();
+  }, []);
+
+  const handleSelectDate = async (newValue) => {
+    if (selectedCentre && selectedDate) {
+      const centerId = selectedCentre._id;
+      const d = new Date(newValue);
+      const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+
+      const res = await fetch(
+        `http://localhost:3333/api/bookingTable/availability/${centerId}/${date}`,
+        {
+          mode: "cors",
+        }
+      );
+      const { availability, tableId } = await res.json();
+      if (res.ok) {
+        setAvailability(availability);
+        if (tableId)
+          setBookingData((data) => ({
+            ...data,
+            bookingTable: tableId,
+          }));
+      } else setMessage("Sorry, This Date Is Fully Book");
+    }
+  };
+
+  const handleSubmitBooking = async () => {
+    const d = new Date(selectedDate);
+    const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
+    const userPackage = {
+      ...bookingData,
+      dayMonthYear: date,
+      timeSlot: selectedSlot,
+      centreName: selectedCentre.name,
+      centre: selectedCentre._id,
+    };
+
+    //* Submit Post Request
+    const res = await fetch(`http://localhost:3333/api/bookingTable/new`, {
+      mode: "cors",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userPackage),
+    });
+    if (res.ok) {
+      history.push("/bookings");
+    } else setMessage("Oops, something went wrong. Try again later");
+  };
+
+  return (
+    <React.Fragment>
+      <CssBaseline />
+      <Container>
+        {message && <h1>{message}</h1>}
+        <Box
+          component="form"
+          sx={{
+            mt: 8,
+          }}
+        >
+          <Typography component="h1" variant="h5">
+            Book a slot
+          </Typography>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="nric"
+            label="NRIC Number"
+            name="NRIC"
+            autoComplete="nric"
+            sx={{ mb: 2 }}
+            autoFocus
+            onChange={(e) =>
+              setBookingData((data) => ({ ...data, nric: e.target.value }))
+            }
+          />
+          <TextField
+            required
+            fullWidth
+            id="name"
+            label="Full Name"
+            name="name"
+            autoComplete="name"
+            sx={{ mb: 2 }}
+            onChange={(e) =>
+              setBookingData((data) => ({ ...data, username: e.target.value }))
+            }
+          />
+          <InputLabel id="vaccineCenterLabel">Vaccine Center</InputLabel>
+          <Select
+            labelId="vaccineCenterLabel"
+            label="Vaccine Center"
+            required
+            fullWidth
+            id="vaccineCenter"
+            value={selectedCentre}
+            onChange={(e) => {
+              setSelectedCentre(e.target.value);
             }}
+            sx={{ mb: 2 }}
           >
-            <Typography component="h1" variant="h5">
-              Book a slot
-            </Typography>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="nric"
-              label="NRIC Number"
-              name="NRIC"
-              autoComplete="nric"
-              sx={{mb: 2}}
-              autoFocus
-            />
-            <TextField
-              required
-              fullWidth
-              id="name"
-              label="Full Name"
-              name="name"
-              autoComplete="name"
-              sx={{mb: 2}}
-            />
-            <InputLabel id="vaccineCenterLabel">Vaccine Center</InputLabel>
-            <Select
-              labelId="vaccineCenterLabel"
-              label="Vaccine Center"
-              required
-              fullWidth
-              id="vaccineCenter"
-              value={this.state.selectedCenter}
-              onChange={this.handleSelect}
-              sx={{mb: 2}}
-            >
-              {getVaccineCenter().map((v) => {
-                return <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>;
+            {centreList &&
+              centreList.map((centre) => {
+                return (
+                  <MenuItem key={centre._id} value={centre}>
+                    {centre.name}
+                  </MenuItem>
+                );
               })}
-            </Select>
-            <DateTimePicker
-              renderInput={(props) => <TextField {...props} />}
-              label="Slot"
-              value={this.state.date}
-              onChange={this.handleDateChange}
-              required
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Register!
-            </Button>
-          </Box>
-        </Container>
-      </React.Fragment>
-    );
-  }
-}
+          </Select>
+          <DatePicker
+            renderInput={(props) => <TextField {...props} />}
+            label="Select Date"
+            value={selectedDate}
+            onChange={(e) => {
+              setSelectedDate(e);
+            }}
+            required
+          />
+          {availability && (
+            <>
+              <InputLabel id="vaccineCenterLabel">Available Slot</InputLabel>
+              <Select
+                labelId="AvailableSlotLabel"
+                label="Available Slot"
+                required
+                fullWidth
+                id="availableSlot"
+                value={selectedSlot}
+                onChange={(e) => setSelectedSlot(e.target.value)}
+                sx={{ mb: 2 }}
+              >
+                {Object.entries(availability).map(([key, value]) => (
+                  <MenuItem key={key} value={value}>
+                    {`${key}: ${value} Slots Available`}
+                  </MenuItem>
+                ))}
+              </Select>
+            </>
+          )}
+          <Button
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            onClick={handleSubmitBooking}
+          >
+            Register!
+          </Button>
+        </Box>
+      </Container>
+    </React.Fragment>
+  );
+};
+
+export default VaccineRegistration;

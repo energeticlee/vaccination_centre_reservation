@@ -5,18 +5,33 @@ const { model, Schema } = require("mongoose");
 
 //* TESTSHORTHAND = USELOCATION TO FETCH RESPECTIVE VIDEOS
 const bookingTable = new Schema({
-  date: { type: Date, required: true },
-  timeSlot: [
-    {
-      type: Schema.Types.Map,
-      of: [{ type: Schema.Types.ObjectId, ref: "user", required: true }],
+  dayMonthYear: { type: String, required: true },
+  shift1: {
+    timeSlot: {
+      type: Schema.Types.Mixed,
+      of: [{ type: Schema.Types.ObjectId, ref: "user" }],
     },
-  ],
+    maxCapacity: Number,
+  },
+  shift2: {
+    timeSlot: {
+      //* timeSlot: { "7": [user_id] }
+      type: Schema.Types.Mixed,
+      of: [{ type: Schema.Types.ObjectId, ref: "user" }],
+    },
+    maxCapacity: Number,
+  },
+  shift3: {
+    timeSlot: {
+      type: Schema.Types.Mixed,
+      of: [{ type: Schema.Types.ObjectId, ref: "user" }],
+    },
+    maxCapacity: Number,
+  },
   centre: { type: Schema.Types.ObjectId, ref: "centre", required: true },
   nurseRoster: {
     type: Schema.Types.ObjectId,
     ref: "nurseRoster",
-    required: true,
   },
 });
 

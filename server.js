@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 //* REQUIRE CONTROLLER | EXPRESS ROUTING
-const centre = require("./controllers/centre");
+const centre = require("./controllers/centreController");
 const bookingTable = require("./controllers/bookingTableController");
 // const user = require("./controllers/user");
 // const nurseRoster = require("./controllers/nurseRoster");
