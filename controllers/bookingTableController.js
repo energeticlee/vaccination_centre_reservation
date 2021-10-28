@@ -3,7 +3,6 @@ const router = express.Router();
 const bookingTableDB = require("../models/bookingTable");
 const userDB = require("../models/user");
 const centreDB = require("../models/centre");
-const shiftDB = require("../models/shift");
 const { getAvailableSlot } = require("../helper");
 
 //* GET available booking date (WORKING)
@@ -123,15 +122,36 @@ router.post("/new", (req, res) => {
                         $set: { bookingTable: createdDB._id },
                       },
                       { new: true },
-                      (err, updatedUserBooking) => {}
+                      (err, updatedUserBooking) => {
+                        console.log("updatedUserBooking", updatedUserBooking);
+                        if (err) res.status(400).json(err);
+                        else
+                          res
+                            .status(200)
+                            .json({ userBooking: updatedUserBooking });
+                      }
                     );
                   }
                 });
               } else {
-                //* BOOKING_DB FOUND
+                //* BOOKING_DB FOUND AND UPDATED
                 if (err) res.status(500).json(err);
                 else {
-                  res.status(200).json({ updatedDB });
+                  //* UPDATE USER WITH DB_ID
+                  userDB.findByIdAndUpdate(
+                    userCreated._id,
+                    {
+                      $set: { bookingTable: updatedDB._id },
+                    },
+                    { new: true },
+                    (err, updatedUserBooking) => {
+                      if (err) res.status(400).json(err);
+                      else
+                        res
+                          .status(200)
+                          .json({ userBooking: updatedUserBooking });
+                    }
+                  );
                 }
               }
             }

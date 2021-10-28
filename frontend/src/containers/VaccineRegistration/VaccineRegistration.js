@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useHistory } from "react-router";
+import { useHistory } from "react-router-dom";
 import {
   Container,
   Box,
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import DatePicker from "@mui/lab/DatePicker";
 
-const VaccineRegistration = () => {
+const VaccineRegistration = ({ setBookingList }) => {
   const [centreList, setCentreList] = useState([]);
   const [selectedCentre, setSelectedCentre] = useState("");
   const [selectedDate, setSelectedDate] = useState();
@@ -84,7 +84,9 @@ const VaccineRegistration = () => {
       body: JSON.stringify(userPackage),
     });
     if (res.ok) {
+      const { userBooking } = await res.json();
       history.push("/bookings");
+      setBookingList([userBooking]);
     } else setMessage("Oops, something went wrong. Try again later");
   };
 

@@ -1,39 +1,40 @@
 import "./App.css";
+import { useState } from "react";
 import { Route, Switch, BrowserRouter } from "react-router-dom";
 import VaccineRegistration from "./containers/VaccineRegistration/VaccineRegistration";
-import { VaccineRegistrationListing } from "./containers/VaccineRegistration/ListVaccinationBooking";
+import VaccineRegistrationListing from "./containers/VaccineRegistration/ListVaccinationBooking";
 import { EditVaccineRegistration } from "./containers/VaccineRegistration/EditVaccinationBooking";
 import { NavBar } from "./containers/Nav";
-import { Component } from "react";
 import AdapterDateFns from "@mui/lab/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
 
-class App extends Component {
-  componentDidMount() {
-    document.title = "Vaccination Center";
-  }
-  render() {
-    return (
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <BrowserRouter>
-          <NavBar />
-          <Switch>
-            <Route
-              path="/bookings"
-              exact
-              component={VaccineRegistrationListing}
+const App = () => {
+  const [bookingList, setBookingList] = useState([]);
+
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <BrowserRouter>
+        <NavBar />
+        <Switch>
+          <Route exact path="/bookings">
+            <VaccineRegistrationListing
+              bookingList={bookingList}
+              setBookingList={setBookingList}
             />
-            <Route
-              path="/bookings/:bookingId"
-              exact
-              component={EditVaccineRegistration}
+          </Route>
+          <Route exact path="/bookings/:bookingId">
+            <EditVaccineRegistration
+              bookingList={bookingList}
+              setBookingList={setBookingList}
             />
-            <Route path="/" exact component={VaccineRegistration} />
-          </Switch>
-        </BrowserRouter>
-      </LocalizationProvider>
-    );
-  }
-}
+          </Route>
+          <Route exact path="/">
+            <VaccineRegistration setBookingList={setBookingList} />
+          </Route>
+        </Switch>
+      </BrowserRouter>
+    </LocalizationProvider>
+  );
+};
 
 export default App;

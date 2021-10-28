@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Table,
   Box,
@@ -11,72 +12,52 @@ import {
   TableHead,
   Container,
 } from "@mui/material";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import React, { Component } from "react";
+import { getTime } from "../Helper/function";
 
-function getBooking() {
-  return [
-    {
-      id: 1,
-      name: "Tan Ah Kow",
-      centerName: "Bukit Timah CC",
-      centerId: 3,
-      startTime: new Date("2021-12-01T09:00:00"),
-    },
-    {
-      id: 2,
-      name: "Jean Lee Ah Meow",
-      centerName: "Bukit Timah CC",
-      centerId: 3,
-      startTime: new Date("2021-12-01T10:00:00"),
-    },
-    {
-      id: 3,
-      name: "Lew Ah Boi",
-      centerName: "Bukit Timah CC",
-      centerId: 3,
-      startTime: new Date("2021-12-01T11:00:00"),
-    },
-  ];
-}
-
-export class VaccineRegistrationListing extends Component {
-  render() {
-    return (
-      <React.Fragment>
-        <CssBaseline />
-        <Container>
-          <Box sx={{mt: 8}}>
+const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
+  return (
+    <React.Fragment>
+      <CssBaseline />
+      <Container>
+        <Box sx={{ mt: 8 }}>
+          <Box sx={{ mt: 8, display: "flex", justifyContent: "space-between" }}>
             <Typography component="h1" variant="h5">
               Active Booking
             </Typography>
-            <TableContainer component={Box}>
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Name</TableCell>
-                    <TableCell align="left">Center Name</TableCell>
-                    <TableCell align="left">Start Time</TableCell>
-                    <TableCell align="left">&nbsp;</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {getBooking().map((row) => (
+            <Typography component="h1" variant="h5">
+              Select Centre
+            </Typography>
+          </Box>
+          <TableContainer component={Box}>
+            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Name</TableCell>
+                  <TableCell align="left">Center Name</TableCell>
+                  <TableCell align="left">Start Time</TableCell>
+                  <TableCell align="left">&nbsp;</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* EDIT THIS */}
+                {bookingList &&
+                  bookingList.map((row) => (
                     <TableRow
-                      key={row.id}
+                      key={row._id}
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
-                        {row.name}
+                        {row.username}
                       </TableCell>
-                      <TableCell align="left">{row.centerName}</TableCell>
+                      <TableCell align="left">{row.centreName}</TableCell>
                       <TableCell align="left">
-                        {row.startTime.toString()}
+                        {getTime(row.dayMonthYear, row.timeSlot)}
                       </TableCell>
                       <TableCell align="left">
-                        <Button component={Link} to='/bookings/1'>
+                        <Button component={Link} to="/bookings/1">
                           <ModeEditIcon />
                         </Button>
                         <Button>
@@ -85,12 +66,13 @@ export class VaccineRegistrationListing extends Component {
                       </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Box>
-        </Container>
-      </React.Fragment>
-    );
-  }
-}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      </Container>
+    </React.Fragment>
+  );
+};
+
+export default ListVaccinationBooking;
