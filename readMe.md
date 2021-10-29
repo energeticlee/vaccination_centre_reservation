@@ -32,3 +32,14 @@ Booking system for vaccination centre.
 
 #### DELETE /api/bookingTable/:userId
 - Delete user booking
+
+## Installation
+
+1) git clone https://github.com/energeticlee/vaccination_centre_reservation.git
+2) cd vaccination_centre_reservation
+3) yarn install-client
+4) yarn build
+5) yarn install
+6) mongoose.connect to any valid mongodb_uri (server.js. line 13)
+7) yarn dev
+8) open chrome and go to http://localhost:3333/
