@@ -3,7 +3,7 @@ import { useEffect } from "react";
 export const useFetchCentre = ({ setCentreList, setMessage }) => {
   useEffect(() => {
     const fetchAllCentre = async () => {
-      const res = await fetch("http://localhost:3333/api/centre/", {
+      const res = await fetch("/api/centre/", {
         mode: "cors",
       });
       const { allCentre } = await res.json();
@@ -15,12 +15,9 @@ export const useFetchCentre = ({ setCentreList, setMessage }) => {
 
 export const fetchCentreBooking = async (centre, setBookingList) => {
   console.log("hit");
-  const res = await fetch(
-    `http://localhost:3333/api/bookingTable/centre-booking/${centre._id}`,
-    {
-      mode: "cors",
-    }
-  );
+  const res = await fetch(`/api/bookingTable/centre-booking/${centre._id}`, {
+    mode: "cors",
+  });
   const { allCentreBooking } = await res.json();
   console.log("allCentreBooking", allCentreBooking);
   if (res.ok) setBookingList(allCentreBooking);
@@ -29,12 +26,9 @@ export const fetchCentreBooking = async (centre, setBookingList) => {
 export const useUserInfo = ({ bookingId, setUserInfo, setMessage }) => {
   useEffect(() => {
     const fetchUserInfo = async () => {
-      const res = await fetch(
-        `http://localhost:3333/api/bookingTable/user-booking/${bookingId}`,
-        {
-          mode: "cors",
-        }
-      );
+      const res = await fetch(`/api/bookingTable/user-booking/${bookingId}`, {
+        mode: "cors",
+      });
       const data = await res.json();
       if (res.ok) setUserInfo(data);
       else setMessage("Website Temporary Unavilable");
@@ -54,7 +48,7 @@ export const useFetchAvailability = (
       const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
 
       const res = await fetch(
-        `http://localhost:3333/api/bookingTable/availability/${centerId}/${date}`,
+        `/api/bookingTable/availability/${centerId}/${date}`,
         {
           mode: "cors",
         }
@@ -80,7 +74,7 @@ export const submitRegistration = async ({
   history,
 }) => {
   //* Submit Post Request
-  const res = await fetch(`http://localhost:3333/api/bookingTable/new`, {
+  const res = await fetch(`/api/bookingTable/new`, {
     mode: "cors",
     method: "POST",
     headers: {
@@ -102,17 +96,14 @@ export const submitEditNew = async ({
   history,
 }) => {
   //* Submit Post Request
-  const res = await fetch(
-    `http://localhost:3333/api/bookingTable/edit-booking/${userPackage._id}`,
-    {
-      mode: "cors",
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(userPackage),
-    }
-  );
+  const res = await fetch(`/api/bookingTable/edit-booking/${userPackage._id}`, {
+    mode: "cors",
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userPackage),
+  });
   if (res.ok) {
     const { userBooking } = await res.json();
     history.push("/bookings");
@@ -127,13 +118,10 @@ export const handleDelete = async (
   index
 ) => {
   //* Submit Post Request
-  const res = await fetch(
-    `http://localhost:3333/api/bookingTable/${userPackageId}`,
-    {
-      mode: "cors",
-      method: "DELETE",
-    }
-  );
+  const res = await fetch(`/api/bookingTable/${userPackageId}`, {
+    mode: "cors",
+    method: "DELETE",
+  });
   if (res.ok) {
     const { deletedUser } = await res.json();
     console.log(index);
