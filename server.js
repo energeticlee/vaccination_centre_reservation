@@ -10,10 +10,13 @@ const app = express();
 const PORT = process.env.PORT || 3333;
 
 //* MONGOOSE CONFIG
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+mongoose.connect(
+  "mongodb+srv://justin:yv0qtNnusx9XVsp2@cluster0.nqhq6.mongodb.net/homage",
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }
+);
 
 //* SERVER LINKED => DATABASE
 mongoose.connection.once("open", () => {
