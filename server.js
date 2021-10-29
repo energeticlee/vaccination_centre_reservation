@@ -21,10 +21,10 @@ mongoose.connection.once("open", () => {
 });
 
 //* MIDDLEWARE
+app.use(express.static(path.join(__dirname, "./frontend/build")));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, "./frontend/build")));
 
 //* REQUIRE CONTROLLER | EXPRESS ROUTING
 const centre = require("./controllers/centreController");
