@@ -40,6 +40,10 @@ app.use("/api/bookingTable", bookingTable);
 // app.use("/api/nurseRoster", nurseRoster);
 // app.use("/api/nurse", nurse);
 
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "./client/build", "index.html"));
+});
+
 // LISTEN
 app.listen(PORT, () => {
   console.log(`Listening on PORT ${PORT}`);
