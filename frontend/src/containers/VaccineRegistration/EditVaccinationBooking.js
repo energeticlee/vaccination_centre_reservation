@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import {
   Container,
   Box,
@@ -16,9 +16,10 @@ import {
   useFetchCentre,
   useUserInfo,
   useFetchAvailability,
+  submitEditNew,
 } from "../Helper/customeHooks";
 
-const EditVaccinationBooking = ({}) => {
+const EditVaccinationBooking = ({ setBookingList }) => {
   const [centreList, setCentreList] = useState([]);
   const [selectedCentre, setSelectedCentre] = useState("");
   const [selectedDate, setSelectedDate] = useState();
@@ -26,6 +27,7 @@ const EditVaccinationBooking = ({}) => {
   const [availability, setAvailability] = useState();
   const [userInfo, setUserInfo] = useState({});
   const [message, setMessage] = useState("");
+  const history = useHistory();
 
   const { bookingId } = useParams();
 
@@ -41,7 +43,7 @@ const EditVaccinationBooking = ({}) => {
     setUserInfo
   );
 
-  const handleSubmitBooking = async () => {
+  const handleEditBooking = async () => {
     const d = new Date(selectedDate);
     const date = `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
 
@@ -52,9 +54,10 @@ const EditVaccinationBooking = ({}) => {
       centreName: selectedCentre.name,
       centre: selectedCentre._id,
     };
+    console.log("userPackage", userPackage);
 
     //* UPDATE
-    // submitRegistration({ userPackage, setBookingList, setMessage, history });
+    submitEditNew({ userPackage, setBookingList, setMessage, history });
   };
 
   return (
@@ -139,7 +142,6 @@ const EditVaccinationBooking = ({}) => {
                 id="availableSlot"
                 value={selectedSlot}
                 onChange={(e) => {
-                  console.log(e.target);
                   setSelectedSlot(e.target.value);
                 }}
                 sx={{ mb: 2 }}
@@ -153,11 +155,10 @@ const EditVaccinationBooking = ({}) => {
             </>
           )}
           <Button
-            type="submit"
             fullWidth
             variant="contained"
             sx={{ mt: 3, mb: 2 }}
-            onClick={handleSubmitBooking}
+            onClick={handleEditBooking}
           >
             Register!
           </Button>

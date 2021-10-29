@@ -36,4 +36,44 @@ const getAvailableSlot = (
   return availability;
 };
 
-module.exports = { getAvailableSlot };
+const getShift = (timeSlot) => {
+  if (timeSlot < 13) return "shift1";
+  else if (timeSlot > 17) return "shift3";
+  else return "shift2";
+};
+
+const getDate = (date) => {
+  const [day, month, year] = date.split(".");
+  const result = new Date(year, month - 1, day);
+  return result;
+};
+
+const getShiftBooking = (centreBooking) => {
+  if (!centreBooking[0]) return [];
+  const { shift1, shift2, shift3 } = centreBooking[0];
+
+  //* IN USER DB, FIND BY ID AND PUSH INTO ARRAY
+
+  let result = [];
+  if (shift1 !== undefined && shift1.timeSlot) {
+    const keyArr = Object.keys(shift1.timeSlot);
+    for (let i = 0; i < keyArr.length; i++) {
+      result.push(...shift1.timeSlot[keyArr[i]]);
+    }
+  }
+  if (shift2 !== undefined && shift2.timeSlot) {
+    const keyArr = Object.keys(shift2.timeSlot);
+    for (let i = 0; i < keyArr.length; i++) {
+      result.push(...shift2.timeSlot[keyArr[i]]);
+    }
+  }
+  if (shift3 !== undefined && shift3.timeSlot) {
+    const keyArr = Object.keys(shift3.timeSlot);
+    for (let i = 0; i < keyArr.length; i++) {
+      result.push(...shift3.timeSlot[keyArr[i]]);
+    }
+  }
+  return result;
+};
+
+module.exports = { getAvailableSlot, getShift, getDate, getShiftBooking };

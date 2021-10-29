@@ -3,7 +3,12 @@ const router = express.Router();
 const bookingTableDB = require("../models/bookingTable");
 const userDB = require("../models/user");
 const centreDB = require("../models/centre");
-const { getAvailableSlot } = require("../helper");
+const {
+  getAvailableSlot,
+  getShift,
+  getDate,
+  getShiftBooking,
+} = require("../helper");
 
 //* GET available booking date (WORKING)
 router.get("/availability/:centreId/:date", (req, res) => {
@@ -55,13 +60,34 @@ router.get("/centre-booking/:centreId", (req, res) => {
   const centreId = req.params.centreId;
 
   //! that date is greater than Date.now()
-  bookingTableDB.find({ centre: centreId }, (err, centreBooking) => {
+  bookingTableDB.find({ centre: centreId }, async (err, centreBooking) => {
+    //* SORT BY DAY
+    centreBooking.sort((a, b) => {
+      return getDate(a.dayMonthYear) - getDate(b.dayMonthYear);
+    });
+
+    //! Return [userData => shift1 > 2 > 3]
+    const bookingIdArr = getShiftBooking(centreBooking);
+
+    const recursiveFind = async (bookingIdArr, count = 0, arr = []) => {
+      if (count >= bookingIdArr.length) return arr;
+
+      const id = bookingIdArr[count].toString();
+      const findByPromise = new Promise((resolve, reject) => {
+        userDB.findById(id).then((data) => resolve(data));
+      });
+
+      await findByPromise.then((data) => arr.push(data));
+      return await recursiveFind(bookingIdArr, (count += 1), arr);
+    };
+    const popResult = await recursiveFind(bookingIdArr);
+
     if (err) res.status(500).json(err);
-    else res.status(200).json(centreBooking);
+    else res.status(200).json({ allCentreBooking: popResult });
   });
 });
 
-//* GET retreive one booking by userId
+//* GET retreive one booking by userId (WORKING)
 router.get("/user-booking/:userId", (req, res) => {
   const userId = req.params.userId;
 
@@ -90,11 +116,7 @@ router.post("/new", (req, res) => {
         else {
           //* Which timeslot / shift
           const { timeSlot } = userCreated;
-          const getShift = (timeSlot) => {
-            if (timeSlot < 13) return "shift1";
-            else if (timeSlot > 17) return "shift3";
-            else return "shift2";
-          };
+
           const shift = getShift(timeSlot);
           const existPath = `${shift}.timeSlot.${timeSlot}`;
           bookingTableDB.findOneAndUpdate(
@@ -163,53 +185,128 @@ router.post("/new", (req, res) => {
 });
 
 //* PUT update user booking
-router.put("edit-booking/:userId", (req, res) => {
+router.put("/edit-booking/:userId", (req, res) => {
   const userId = req.params.userId;
-  const { booking } = req.body;
+  console.log(req.body);
+  const { centre, dayMonthYear, timeSlot } = req.body;
 
-  userDB.findByIdAndUpdate(userId, req.body, (err, prevUser) => {
+  userDB.findByIdAndUpdate(userId, req.body, async (err, prevUser) => {
     if (err) res.status(500).json(err);
     else {
-      //* User updated centre
-      if (booking.centre !== prevUser.centre) {
-      }
-      //* User updated dayMonthYear
-      else if (booking.dayMonthYear !== prevUser.dayMonthYear) {
-      }
-      //* User updated timeSlot
-      else if (booking.timeSlot !== prevUser.timeSlot) {
+      //* centre Change, remove id from bookingDB..timslot
+      if (
+        centre !== prevUser.centre ||
+        dayMonthYear !== prevUser.dayMonthYear ||
+        timeSlot !== prevUser.timeSlot
+      ) {
+        //* in PrevBookingDB, update pop user._id
+        const popPreBook = await prevUser.populate("bookingTable");
+        const oldShift = getShift(popPreBook.timeSlot);
+        const prevTimeSlot = popPreBook.timeSlot;
+
+        const targetSlot =
+          popPreBook.bookingTable[oldShift].timeSlot[prevTimeSlot];
+
+        targetSlot.splice(targetSlot.indexOf(prevUser._id), 1);
+        popPreBook.bookingTable[oldShift].timeSlot[prevTimeSlot] = targetSlot;
+
+        bookingTableDB.findByIdAndUpdate(targetSlot._id, popPreBook);
+
+        //* add new bookingDB and add timeSlot
+        //* Which timeslot / shift
+        const { timeSlot } = req.body;
+
+        const shift = getShift(timeSlot);
+        const existPath = `${shift}.timeSlot.${timeSlot}`;
+        bookingTableDB.findOneAndUpdate(
+          { dayMonthYear, centre },
+          { $push: { [existPath]: req.body._id } },
+          { new: true },
+          (err, updatedDB) => {
+            if (err) res.status(500).json(err);
+            else if (!updatedDB) {
+              //* NO BOOKING_DB Found => CREATE NEW
+              const newPath = `${shift}.timeSlot.${timeSlot}`;
+              const dataPackage = {
+                dayMonthYear,
+                centre,
+                [newPath]: [req.body._id],
+              };
+
+              bookingTableDB.create(dataPackage, (err, createdDB) => {
+                if (err) res.status(500).json(err);
+                else {
+                  //* SUCCESSFUL CREATED DB, UPDATE USER WITH DB_ID
+                  userDB.findByIdAndUpdate(
+                    req.body._id,
+                    {
+                      $set: { bookingTable: createdDB._id },
+                    },
+                    { new: true },
+                    (err, updatedUserBooking) => {
+                      if (err) res.status(400).json(err);
+                      else
+                        res
+                          .status(200)
+                          .json({ userBooking: updatedUserBooking });
+                    }
+                  );
+                }
+              });
+            } else {
+              //* BOOKING_DB FOUND AND UPDATED
+              if (err) res.status(500).json(err);
+              else {
+                //* UPDATE USER WITH DB_ID
+                userDB.findByIdAndUpdate(
+                  req.body._id,
+                  {
+                    $set: { bookingTable: updatedDB._id },
+                  },
+                  { new: true },
+                  (err, updatedUserBooking) => {
+                    if (err) res.status(400).json(err);
+                    else
+                      res.status(200).json({ userBooking: updatedUserBooking });
+                  }
+                );
+              }
+            }
+          }
+        );
       }
     }
   });
 });
 
 //* Delete user, update booking => pop userId
-router.delete("/delete/:userId", (req, res) => {
+router.delete("/:userId", (req, res) => {
   const userId = req.params.userId;
 
-  userDB.findByIdAndDelete(userId, (err, deletedUser) => {
+  userDB.findByIdAndDelete(userId, async (err, deletedUser) => {
     if (err) res.status(500).json(err);
     //* Remove userId from booking
     const { bookingTable, timeSlot } = deletedUser;
-
-    //* Which shift
-    const getShift = (timeSlot) => {
-      if (timeSlot < 13) return "shift1";
-      else if (timeSlot > 17) return "shift3";
-      else return "shift2";
-    };
+    console.log("deletedUser", deletedUser);
+    const popUserBooking = await deletedUser.populate("bookingTable");
+    const bookingDb = popUserBooking.bookingTable;
     const shift = getShift(timeSlot);
-    const popObj = {};
+    bookingDb[shift].timeSlot[timeSlot].splice(
+      bookingDb[shift].timeSlot[timeSlot].indexOf(userId),
+      1
+    );
     //* push user_id into schedule
-    popObj[shift][timeSlot] = userId;
-
+    console.log("deletedUser", deletedUser);
     bookingTableDB.findByIdAndUpdate(
-      bookingTable,
-      { $pop: { popObj } },
+      bookingTable.toString(),
+      bookingDb,
       { new: true },
       (err, updatedBookingTable) => {
-        if (err) res.status(500).json(err);
-        else res.status(200).json(updatedBookingTable);
+        console.log("deletedUser", deletedUser);
+        if (err) {
+          console.log(err);
+          res.status(500).json(err);
+        } else res.status(200).json({ deletedUser });
       }
     );
   });

@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import {
   Table,
   Box,
@@ -11,25 +11,52 @@ import {
   TableRow,
   TableHead,
   Container,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import ModeEditIcon from "@mui/icons-material/ModeEdit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { getTime } from "../Helper/function";
+import { handleDelete, fetchCentreBooking } from "../Helper/customeHooks";
 
-const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
+const ListVaccinationBooking = ({
+  bookingList,
+  setBookingList,
+  centreList,
+}) => {
+  const [message, setMessage] = useState();
+  const [selectedCentre, setSelectedCentre] = useState("");
   return (
-    <React.Fragment>
+    <>
       <CssBaseline />
       <Container>
         <Box sx={{ mt: 8 }}>
+          {message && <h1>{message}</h1>}
           <Box sx={{ mt: 8, display: "flex", justifyContent: "space-between" }}>
             <Typography component="h1" variant="h5">
               Active Booking
             </Typography>
-            <Typography component="h1" variant="h5">
-              Select Centre
-            </Typography>
+            <Select
+              labelId="vaccineCenterLabel"
+              label="Vaccine Center"
+              id="vaccineCenter"
+              value={selectedCentre}
+              onChange={(e) => {
+                setSelectedCentre(e.target.value);
+                fetchCentreBooking(e.target.value, setBookingList);
+              }}
+              sx={{ width: 1 / 4, mb: 2 }}
+            >
+              {centreList &&
+                centreList.map((centre) => {
+                  return (
+                    <MenuItem key={centre._id} value={centre}>
+                      {centre.name}
+                    </MenuItem>
+                  );
+                })}
+            </Select>
           </Box>
           <TableContainer component={Box}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
@@ -42,9 +69,8 @@ const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {/* EDIT THIS */}
                 {bookingList &&
-                  bookingList.map((row) => (
+                  bookingList.map((row, index) => (
                     <TableRow
                       key={row._id}
                       sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
@@ -60,7 +86,16 @@ const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
                         <Button component={Link} to={`/bookings/${row._id}`}>
                           <ModeEditIcon />
                         </Button>
-                        <Button>
+                        <Button
+                          onClick={() =>
+                            handleDelete(
+                              row._id,
+                              setBookingList,
+                              setMessage,
+                              index
+                            )
+                          }
+                        >
                           <DeleteIcon />
                         </Button>
                       </TableCell>
@@ -71,7 +106,7 @@ const ListVaccinationBooking = ({ bookingList, setBookingList }) => {
           </TableContainer>
         </Box>
       </Container>
-    </React.Fragment>
+    </>
   );
 };
 

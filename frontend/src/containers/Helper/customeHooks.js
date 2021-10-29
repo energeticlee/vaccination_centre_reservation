@@ -8,10 +8,22 @@ export const useFetchCentre = ({ setCentreList, setMessage }) => {
       });
       const { allCentre } = await res.json();
       if (res.ok) setCentreList(allCentre);
-      else setMessage("Website Temporary Unavilable");
     };
     fetchAllCentre();
   }, []);
+};
+
+export const fetchCentreBooking = async (centre, setBookingList) => {
+  console.log("hit");
+  const res = await fetch(
+    `http://localhost:3333/api/bookingTable/centre-booking/${centre._id}`,
+    {
+      mode: "cors",
+    }
+  );
+  const { allCentreBooking } = await res.json();
+  console.log("allCentreBooking", allCentreBooking);
+  if (res.ok) setBookingList(allCentreBooking);
 };
 
 export const useUserInfo = ({ bookingId, setUserInfo, setMessage }) => {
@@ -24,7 +36,6 @@ export const useUserInfo = ({ bookingId, setUserInfo, setMessage }) => {
         }
       );
       const data = await res.json();
-      console.log("Data", data);
       if (res.ok) setUserInfo(data);
       else setMessage("Website Temporary Unavilable");
     };
@@ -81,5 +92,53 @@ export const submitRegistration = async ({
     const { userBooking } = await res.json();
     history.push("/bookings");
     setBookingList([userBooking]);
+  } else setMessage("Oops, something went wrong. Try again later");
+};
+
+export const submitEditNew = async ({
+  userPackage,
+  setBookingList,
+  setMessage,
+  history,
+}) => {
+  //* Submit Post Request
+  const res = await fetch(
+    `http://localhost:3333/api/bookingTable/edit-booking/${userPackage._id}`,
+    {
+      mode: "cors",
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userPackage),
+    }
+  );
+  if (res.ok) {
+    const { userBooking } = await res.json();
+    history.push("/bookings");
+    setBookingList([userBooking]);
+  } else setMessage("Oops, something went wrong. Try again later");
+};
+
+export const handleDelete = async (
+  userPackageId,
+  setBookingList,
+  setMessage,
+  index
+) => {
+  //* Submit Post Request
+  const res = await fetch(
+    `http://localhost:3333/api/bookingTable/${userPackageId}`,
+    {
+      mode: "cors",
+      method: "DELETE",
+    }
+  );
+  if (res.ok) {
+    const { deletedUser } = await res.json();
+    console.log(index);
+    setBookingList((list) => {
+      list.splice(index, 1);
+    });
   } else setMessage("Oops, something went wrong. Try again later");
 };

@@ -13,13 +13,11 @@ import {
 } from "@mui/material";
 import DatePicker from "@mui/lab/DatePicker";
 import {
-  useFetchCentre,
   useFetchAvailability,
   submitRegistration,
 } from "../Helper/customeHooks";
 
-const VaccineRegistration = ({ setBookingList }) => {
-  const [centreList, setCentreList] = useState([]);
+const VaccineRegistration = ({ setBookingList, centreList }) => {
   const [selectedCentre, setSelectedCentre] = useState("");
   const [selectedDate, setSelectedDate] = useState();
   const [selectedSlot, setSelectedSlot] = useState("");
@@ -37,8 +35,6 @@ const VaccineRegistration = ({ setBookingList }) => {
     },
     setBookingData
   );
-
-  useFetchCentre({ setCentreList, setMessage });
 
   const handleSubmitBooking = async () => {
     const d = new Date(selectedDate);

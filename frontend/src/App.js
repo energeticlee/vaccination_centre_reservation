@@ -7,9 +7,13 @@ import EditVaccineRegistration from "./containers/VaccineRegistration/EditVaccin
 import { NavBar } from "./containers/Nav";
 import AdapterDateFns from "@mui/lab/AdapterDayjs";
 import LocalizationProvider from "@mui/lab/LocalizationProvider";
+import { useFetchCentre } from "./containers/Helper/customeHooks";
 
 const App = () => {
   const [bookingList, setBookingList] = useState([]);
+  const [centreList, setCentreList] = useState([]);
+
+  useFetchCentre({ setCentreList });
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -20,16 +24,17 @@ const App = () => {
             <VaccineRegistrationListing
               bookingList={bookingList}
               setBookingList={setBookingList}
+              centreList={centreList}
             />
           </Route>
           <Route exact path="/bookings/:bookingId">
-            <EditVaccineRegistration
-              bookingList={bookingList}
-              setBookingList={setBookingList}
-            />
+            <EditVaccineRegistration setBookingList={setBookingList} />
           </Route>
           <Route exact path="/">
-            <VaccineRegistration setBookingList={setBookingList} />
+            <VaccineRegistration
+              setBookingList={setBookingList}
+              centreList={centreList}
+            />
           </Route>
         </Switch>
       </BrowserRouter>
