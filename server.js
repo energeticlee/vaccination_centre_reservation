@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3333;
 
 //* MONGOOSE CONFIG
 mongoose.connect(
-  "mongodb+srv://justin:yv0qtNnusx9XVsp2@cluster0.nqhq6.mongodb.net/homage",
+  "PROCESS.ENV.MONGDB_URI",
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
